@@ -549,6 +549,7 @@ public class _ptFilter5 implements PlugInFilter {
 			ic.addMouseListener(this);
 			ic.addKeyListener(this);
 			slices=imp.getStack().getSize();
+			slices=(nChannel>1)?slices/nChannel:slices;
 			pathpFrame=new GeneralPath[finalSlice-startSlice+1];
 			manualPathpFrame=new GeneralPath[finalSlice-startSlice+1];
 			selectedpFrame=new GeneralPath[finalSlice-startSlice+1];
@@ -736,7 +737,7 @@ public class _ptFilter5 implements PlugInFilter {
 				c.gridy++;
 				tcmp++;
 			}
-			if (slices/nChannel>1) {
+			if (slices>1) {
 				cmp=(ScrollbarWithLabel)getComponent(tcmp);
 				gbl.setConstraints(cmp,c);
 				cmp.addAdjustmentListener(this);
@@ -850,7 +851,7 @@ public class _ptFilter5 implements PlugInFilter {
 						long now = System.currentTimeMillis();
 						int wt=0;
 						currSlice++;
-						if (currSlice>slices/nChannel) currSlice=1;
+						if (currSlice>slices) currSlice=1;
 						imp.setSlice((currSlice-1)*nChannel+actualChannel);
 						updateTracksCanvas();
 						cmp.setValue(currSlice);
@@ -1797,21 +1798,25 @@ public class _ptFilter5 implements PlugInFilter {
 				if (e.getButton()==MouseEvent.BUTTON1) {
 					if (commenting||(e.getModifiers()&1)==1){
 						if ((mTrack)||((!mTrack)&&aSelectedTracks.indexOf(new Integer(closest))!=-1)){
-							resetSelection();
-							if (mTrack) selectOneTrack(manualTracks[closest], selectedpFrame);
+
+							resetSelection();	
+							if (mTrack) {
+								selectOneTrack(manualTracks[closest], selectedpFrame);							
+								selectedBoundaries[0][0]=manualTracks[closest].boundZ-1;
+								selectedBoundaries[0][1]=manualTracks[closest].element[0].comment;
+								selectedBoundaries[1][0]=manualTracks[closest].boundZ+manualTracks[closest].boundD-2;
+								selectedBoundaries[1][1]=manualTracks[closest].element[manualTracks[closest].boundD-1].comment;
+								selBoundCnt=3;
+								unDo.setEnabled(false);
+								butDelCurr.setEnabled(true);
+							}
 							else selectOneTrack(tracks[closest], selectedpFrame);
 							currTrack=closest;
-							selectedBoundaries[0][0]=manualTracks[closest].boundZ-1;
-							selectedBoundaries[0][1]=manualTracks[closest].element[0].comment;
-							selectedBoundaries[1][0]=manualTracks[closest].boundZ+manualTracks[closest].boundD-2;
-							selectedBoundaries[1][1]=manualTracks[closest].element[manualTracks[closest].boundD-1].comment;
-							selBoundCnt=3;
-							unDo.setEnabled(false);
-							butDelCurr.setEnabled(true);
 							//for (int z=0;z<manualTracks[closest].boundD;z++) IJ.log("  n "+manualTracks[closest].element[z].comment);
 							//IJ.log(selectedBoundaries[0][0]+","+selectedBoundaries[1][0]);
 							this.sBar1.setText(closest+"/");
 							showMsg(closest+". track selected");
+							
 							//this.sBar3.setText(closest+". track selected");
 						}
 					}
@@ -1855,7 +1860,7 @@ public class _ptFilter5 implements PlugInFilter {
 			actualChannel=1;
 			if (nChannel>1) actualChannel=c_cmp.getValue();
 			if (currSlice<1) currSlice=1;
-			if (currSlice>slices/nChannel) currSlice=slices/nChannel;
+			if (currSlice>slices) currSlice=slices;
 			cmp.setValue(currSlice);
 			imp.setSlice((currSlice-1)*nChannel+actualChannel);
 			this.updateTracksCanvas();
